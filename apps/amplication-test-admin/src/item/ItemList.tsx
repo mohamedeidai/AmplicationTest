@@ -8,6 +8,7 @@ export const ItemList = (props: ListProps): React.ReactElement => {
       <Datagrid rowClick="show" bulkActionButtons={false}>
         <DateField source="createdAt" label="Created At" />
         <TextField label="ID" source="id" />
+        <TextField label="ItemImage" source="itemImage" />
         <TextField label="Name" source="name" />
         <TextField label="Note" source="note" />
         <TextField label="Price" source="price" />

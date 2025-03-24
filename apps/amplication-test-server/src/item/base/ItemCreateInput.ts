@@ -11,20 +11,33 @@ https://docs.amplication.com/how-to/custom-code
   */
 import { InputType, Field } from "@nestjs/graphql";
 import { ApiProperty } from "@nestjs/swagger";
+import { IsJSONValue } from "../../validators";
 import {
+  IsOptional,
   IsString,
   MaxLength,
-  IsOptional,
   IsNumber,
   Min,
   Max,
   ValidateNested,
 } from "class-validator";
+import { GraphQLJSON } from "graphql-type-json";
+import { InputJsonValue } from "../../types";
 import { SaleDetailCreateNestedManyWithoutItemsInput } from "./SaleDetailCreateNestedManyWithoutItemsInput";
 import { Type } from "class-transformer";
 
 @InputType()
 class ItemCreateInput {
+  @ApiProperty({
+    required: false,
+  })
+  @IsJSONValue()
+  @IsOptional()
+  @Field(() => GraphQLJSON, {
+    nullable: true,
+  })
+  itemImage?: InputJsonValue;
+
   @ApiProperty({
     required: false,
     type: String,

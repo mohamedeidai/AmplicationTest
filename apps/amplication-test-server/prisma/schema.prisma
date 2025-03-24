@@ -45,9 +45,22 @@ model SaleDetail {
 model Item {
   createdAt   DateTime     @default(now())
   id          String       @id @default(cuid())
+  itemImage   Json?
   name        String?
   note        String?
   price       Float?
   saleDetails SaleDetail[]
   updatedAt   DateTime     @updatedAt
+}
+
+model User {
+  createdAt DateTime @default(now())
+  email     String?  @unique
+  firstName String?
+  id        String   @id @default(cuid())
+  lastName  String?
+  password  String
+  roles     Json
+  updatedAt DateTime @updatedAt
+  username  String   @unique
 }

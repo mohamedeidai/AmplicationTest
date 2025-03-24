@@ -16,17 +16,35 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { SaleDetailService } from "../saleDetail.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { SaleDetailCreateInput } from "./SaleDetailCreateInput";
 import { SaleDetail } from "./SaleDetail";
 import { SaleDetailFindManyArgs } from "./SaleDetailFindManyArgs";
 import { SaleDetailWhereUniqueInput } from "./SaleDetailWhereUniqueInput";
 import { SaleDetailUpdateInput } from "./SaleDetailUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class SaleDetailControllerBase {
-  constructor(protected readonly service: SaleDetailService) {}
+  constructor(
+    protected readonly service: SaleDetailService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: SaleDetail })
+  @nestAccessControl.UseRoles({
+    resource: "SaleDetail",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async createSaleDetail(
     @common.Body() data: SaleDetailCreateInput
   ): Promise<SaleDetail> {
@@ -66,9 +84,18 @@ export class SaleDetailControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [SaleDetail] })
   @ApiNestedQuery(SaleDetailFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "SaleDetail",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async saleDetails(@common.Req() request: Request): Promise<SaleDetail[]> {
     const args = plainToClass(SaleDetailFindManyArgs, request.query);
     return this.service.saleDetails({
@@ -97,9 +124,18 @@ export class SaleDetailControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: SaleDetail })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "SaleDetail",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async saleDetail(
     @common.Param() params: SaleDetailWhereUniqueInput
   ): Promise<SaleDetail | null> {
@@ -135,9 +171,18 @@ export class SaleDetailControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: SaleDetail })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "SaleDetail",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async updateSaleDetail(
     @common.Param() params: SaleDetailWhereUniqueInput,
     @common.Body() data: SaleDetailUpdateInput
@@ -191,6 +236,14 @@ export class SaleDetailControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: SaleDetail })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "SaleDetail",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteSaleDetail(
     @common.Param() params: SaleDetailWhereUniqueInput
   ): Promise<SaleDetail | null> {

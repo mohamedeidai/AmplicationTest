@@ -20,6 +20,7 @@ export const ItemShow = (props: ShowProps): React.ReactElement => {
       <SimpleShowLayout>
         <DateField source="createdAt" label="Created At" />
         <TextField label="ID" source="id" />
+        <TextField label="ItemImage" source="itemImage" />
         <TextField label="Name" source="name" />
         <TextField label="Note" source="note" />
         <TextField label="Price" source="price" />

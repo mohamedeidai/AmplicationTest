@@ -16,6 +16,7 @@ export const ItemEdit = (props: EditProps): React.ReactElement => {
   return (
     <Edit {...props}>
       <SimpleForm>
+        <div />
         <TextInput label="Name" source="name" />
         <TextInput label="Note" source="note" />
         <NumberInput label="Price" source="price" />
