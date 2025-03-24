@@ -14,6 +14,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { StringFilter } from "../../util/StringFilter";
 import { Type } from "class-transformer";
 import { IsOptional, ValidateNested } from "class-validator";
+import { JsonFilter } from "../../util/JsonFilter";
 import { StringNullableFilter } from "../../util/StringNullableFilter";
 import { FloatNullableFilter } from "../../util/FloatNullableFilter";
 import { SaleDetailListRelationFilter } from "../../saleDetail/base/SaleDetailListRelationFilter";
@@ -30,6 +31,17 @@ class ItemWhereInput {
     nullable: true,
   })
   id?: StringFilter;
+
+  @ApiProperty({
+    required: false,
+    type: JsonFilter,
+  })
+  @Type(() => JsonFilter)
+  @IsOptional()
+  @Field(() => JsonFilter, {
+    nullable: true,
+  })
+  itemImage?: JsonFilter;
 
   @ApiProperty({
     required: false,

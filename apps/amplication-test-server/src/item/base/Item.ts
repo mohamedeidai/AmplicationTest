@@ -15,8 +15,8 @@ import { ApiProperty } from "@nestjs/swagger";
 import {
   IsDate,
   IsString,
-  MaxLength,
   IsOptional,
+  MaxLength,
   IsNumber,
   Min,
   Max,
@@ -24,6 +24,9 @@ import {
 } from "class-validator";
 
 import { Type } from "class-transformer";
+import { IsJSONValue } from "../../validators";
+import { GraphQLJSON } from "graphql-type-json";
+import { JsonValue } from "type-fest";
 import { SaleDetail } from "../../saleDetail/base/SaleDetail";
 
 @ObjectType()
@@ -43,6 +46,16 @@ class Item {
   @IsString()
   @Field(() => String)
   id!: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsJSONValue()
+  @IsOptional()
+  @Field(() => GraphQLJSON, {
+    nullable: true,
+  })
+  itemImage!: JsonValue;
 
   @ApiProperty({
     required: false,

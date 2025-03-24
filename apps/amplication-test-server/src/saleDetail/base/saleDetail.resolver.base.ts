@@ -13,6 +13,12 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { SaleDetail } from "./SaleDetail";
 import { SaleDetailCountArgs } from "./SaleDetailCountArgs";
 import { SaleDetailFindManyArgs } from "./SaleDetailFindManyArgs";
@@ -23,10 +29,20 @@ import { DeleteSaleDetailArgs } from "./DeleteSaleDetailArgs";
 import { Item } from "../../item/base/Item";
 import { Sale } from "../../sale/base/Sale";
 import { SaleDetailService } from "../saleDetail.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => SaleDetail)
 export class SaleDetailResolverBase {
-  constructor(protected readonly service: SaleDetailService) {}
+  constructor(
+    protected readonly service: SaleDetailService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "SaleDetail",
+    action: "read",
+    possession: "any",
+  })
   async _saleDetailsMeta(
     @graphql.Args() args: SaleDetailCountArgs
   ): Promise<MetaQueryPayload> {
@@ -36,14 +52,26 @@ export class SaleDetailResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [SaleDetail])
+  @nestAccessControl.UseRoles({
+    resource: "SaleDetail",
+    action: "read",
+    possession: "any",
+  })
   async saleDetails(
     @graphql.Args() args: SaleDetailFindManyArgs
   ): Promise<SaleDetail[]> {
     return this.service.saleDetails(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => SaleDetail, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "SaleDetail",
+    action: "read",
+    possession: "own",
+  })
   async saleDetail(
     @graphql.Args() args: SaleDetailFindUniqueArgs
   ): Promise<SaleDetail | null> {
@@ -54,7 +82,13 @@ export class SaleDetailResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => SaleDetail)
+  @nestAccessControl.UseRoles({
+    resource: "SaleDetail",
+    action: "create",
+    possession: "any",
+  })
   async createSaleDetail(
     @graphql.Args() args: CreateSaleDetailArgs
   ): Promise<SaleDetail> {
@@ -74,7 +108,13 @@ export class SaleDetailResolverBase {
     });
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => SaleDetail)
+  @nestAccessControl.UseRoles({
+    resource: "SaleDetail",
+    action: "update",
+    possession: "any",
+  })
   async updateSaleDetail(
     @graphql.Args() args: UpdateSaleDetailArgs
   ): Promise<SaleDetail | null> {
@@ -104,6 +144,11 @@ export class SaleDetailResolverBase {
   }
 
   @graphql.Mutation(() => SaleDetail)
+  @nestAccessControl.UseRoles({
+    resource: "SaleDetail",
+    action: "delete",
+    possession: "any",
+  })
   async deleteSaleDetail(
     @graphql.Args() args: DeleteSaleDetailArgs
   ): Promise<SaleDetail | null> {
@@ -119,9 +164,15 @@ export class SaleDetailResolverBase {
     }
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.ResolveField(() => Item, {
     nullable: true,
     name: "item",
+  })
+  @nestAccessControl.UseRoles({
+    resource: "Item",
+    action: "read",
+    possession: "any",
   })
   async getItem(@graphql.Parent() parent: SaleDetail): Promise<Item | null> {
     const result = await this.service.getItem(parent.id);
@@ -132,9 +183,15 @@ export class SaleDetailResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.ResolveField(() => Sale, {
     nullable: true,
     name: "sale",
+  })
+  @nestAccessControl.UseRoles({
+    resource: "Sale",
+    action: "read",
+    possession: "any",
   })
   async getSale(@graphql.Parent() parent: SaleDetail): Promise<Sale | null> {
     const result = await this.service.getSale(parent.id);

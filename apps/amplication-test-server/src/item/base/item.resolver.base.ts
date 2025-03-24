@@ -13,6 +13,12 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { Item } from "./Item";
 import { ItemCountArgs } from "./ItemCountArgs";
 import { ItemFindManyArgs } from "./ItemFindManyArgs";
@@ -23,10 +29,20 @@ import { DeleteItemArgs } from "./DeleteItemArgs";
 import { SaleDetailFindManyArgs } from "../../saleDetail/base/SaleDetailFindManyArgs";
 import { SaleDetail } from "../../saleDetail/base/SaleDetail";
 import { ItemService } from "../item.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => Item)
 export class ItemResolverBase {
-  constructor(protected readonly service: ItemService) {}
+  constructor(
+    protected readonly service: ItemService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "Item",
+    action: "read",
+    possession: "any",
+  })
   async _itemsMeta(
     @graphql.Args() args: ItemCountArgs
   ): Promise<MetaQueryPayload> {
@@ -36,12 +52,24 @@ export class ItemResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [Item])
+  @nestAccessControl.UseRoles({
+    resource: "Item",
+    action: "read",
+    possession: "any",
+  })
   async items(@graphql.Args() args: ItemFindManyArgs): Promise<Item[]> {
     return this.service.items(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => Item, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "Item",
+    action: "read",
+    possession: "own",
+  })
   async item(@graphql.Args() args: ItemFindUniqueArgs): Promise<Item | null> {
     const result = await this.service.item(args);
     if (result === null) {
@@ -50,7 +78,13 @@ export class ItemResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => Item)
+  @nestAccessControl.UseRoles({
+    resource: "Item",
+    action: "create",
+    possession: "any",
+  })
   async createItem(@graphql.Args() args: CreateItemArgs): Promise<Item> {
     return await this.service.createItem({
       ...args,
@@ -58,7 +92,13 @@ export class ItemResolverBase {
     });
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => Item)
+  @nestAccessControl.UseRoles({
+    resource: "Item",
+    action: "update",
+    possession: "any",
+  })
   async updateItem(@graphql.Args() args: UpdateItemArgs): Promise<Item | null> {
     try {
       return await this.service.updateItem({
@@ -76,6 +116,11 @@ export class ItemResolverBase {
   }
 
   @graphql.Mutation(() => Item)
+  @nestAccessControl.UseRoles({
+    resource: "Item",
+    action: "delete",
+    possession: "any",
+  })
   async deleteItem(@graphql.Args() args: DeleteItemArgs): Promise<Item | null> {
     try {
       return await this.service.deleteItem(args);
@@ -89,7 +134,13 @@ export class ItemResolverBase {
     }
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.ResolveField(() => [SaleDetail], { name: "saleDetails" })
+  @nestAccessControl.UseRoles({
+    resource: "SaleDetail",
+    action: "read",
+    possession: "any",
+  })
   async findSaleDetails(
     @graphql.Parent() parent: Item,
     @graphql.Args() args: SaleDetailFindManyArgs

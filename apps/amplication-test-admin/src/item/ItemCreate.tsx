@@ -16,6 +16,7 @@ export const ItemCreate = (props: CreateProps): React.ReactElement => {
   return (
     <Create {...props}>
       <SimpleForm>
+        <div />
         <TextInput label="Name" source="name" />
         <TextInput label="Note" source="note" />
         <NumberInput label="Price" source="price" />
